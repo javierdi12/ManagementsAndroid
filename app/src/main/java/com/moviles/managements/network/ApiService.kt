@@ -1,4 +1,5 @@
 package com.moviles.managements.network
+import com.moviles.managements.models.Course
 import com.moviles.managements.models.Student
 import retrofit2.Response
 import retrofit2.http.Body
@@ -32,4 +33,10 @@ interface ApiService {
 
     @DELETE("api/student/{id}")
     suspend fun deleteStudent(@Path("id") id: Int?): Response<Unit>
+
+    @GET("api/student/{id}")
+    suspend fun getStudent(@Path("id") id: Int): Student
+
+    @GET("api/course/{id}")
+    suspend fun getCourse(@Path("id") id: Int): Course
 }

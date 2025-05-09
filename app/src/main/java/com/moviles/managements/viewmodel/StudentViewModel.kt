@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import android.content.Context
 import android.net.Uri
+import com.moviles.managements.network.ApiService
 
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -31,10 +32,12 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     private val _students = MutableStateFlow<List<Student>>(emptyList())
     val students: StateFlow<List<Student>> get() = _students
 
+    private val apiService: ApiService = RetrofitInstance.create(application)
+
     fun fetchStudents(){
         viewModelScope.launch {
             try {
-                _students.value = RetrofitInstance.api.getStudents()
+                _students.value = apiService.getStudents() // Usa apiService aquí
                 Log.i("MyViewModel", "Fetching data from API... ${_students.value}")
             } catch (e: Exception){
                 Log.e("ViewmodelError", "Error: ${e}")
@@ -45,7 +48,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     fun addStudent(student: Student) {
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.api.addStudent(student)
+                val response = apiService.addStudent(student)
                 _students.value += response
                 Log.i("ViewModelInfo", "Response: ${response}")
             } catch (e: HttpException) {
@@ -61,7 +64,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 Log.i("ViewModelInfo", "Event: ${student}")
-                val response = RetrofitInstance.api.updateStudent(student.id, student)
+                val response = apiService.updateStudent(student.id, student)
                 _students.value = _students.value.map { student ->
                     if (student.id == response.id) response else student
                 }
@@ -79,7 +82,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
         studentId?.let { id ->
             viewModelScope.launch {
                 try {
-                    RetrofitInstance.api.deleteStudent(id)
+                    apiService.deleteStudent(id)
                     _students.value = _students.value.filter { it.id != studentId }
                 } catch (e: Exception) {
                     Log.e("ViewModelError", "Error deleting event: ${e.message}")
