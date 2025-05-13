@@ -37,7 +37,7 @@ class StudentViewModel(application: Application) : AndroidViewModel(application)
     fun fetchStudents(){
         viewModelScope.launch {
             try {
-                _students.value = apiService.getStudents() // Usa apiService aquí
+                _students.value = apiService.getStudents()
                 Log.i("MyViewModel", "Fetching data from API... ${_students.value}")
             } catch (e: Exception){
                 Log.e("ViewmodelError", "Error: ${e}")

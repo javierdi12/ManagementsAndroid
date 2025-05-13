@@ -15,6 +15,8 @@ appcompat = "1.7.0"
 roomCommonJvmVersion = "2.7.1"
 roomCompilerVersion = "2.7.1"
 roomRuntimeAndroid = "2.7.1"
+navigationComposeAndroid = "2.9.0"
+common = "0.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +41,8 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvmVersion" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompilerVersion" }
 androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomRuntimeAndroid" }
+androidx-navigation-compose-android = { group = "androidx.navigation", name = "navigation-compose-android", version.ref = "navigationComposeAndroid" }
+common = { group = "com.google.ai.client.generativeai", name = "common", version.ref = "common" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
