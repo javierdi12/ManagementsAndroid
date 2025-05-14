@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.moviles.managements.ui.theme.screens.StudentActivity
+import com.moviles.managements.ui.theme.screens.StudentDetailActivity
 
 
 /**
@@ -30,7 +30,7 @@ fun ManagementApp() {
         }
 
         composable("studentMenu") {
-            StudentActivity.Content()
+            StudentDetailActivity.Content()
         }
     }
 }

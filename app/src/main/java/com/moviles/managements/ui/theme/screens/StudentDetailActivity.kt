@@ -1,66 +1,53 @@
 package com.moviles.managements.ui.theme.screens
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.moviles.managements.models.Student
 import com.moviles.managements.ui.theme.ManagementsTheme
 import com.moviles.managements.viewmodel.StudentViewModel
-
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.moviles.managements.models.Course
+import androidx.compose.ui.platform.LocalContext
 
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.DropdownMenuItem
 
+import androidx.lifecycle.LifecycleEventObserver
 
 
 class StudentDetailActivity : ComponentActivity() {
@@ -69,274 +56,125 @@ class StudentDetailActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ManagementsTheme {
-                val viewModel: StudentViewModel = viewModel()
-                StudentScreen(viewModel)
+                Content()
             }
         }
     }
-}
 
+    companion object {
+        @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+        @Composable
+        fun Content() {
+            val viewModel: StudentViewModel = viewModel()
+            val context = LocalContext.current
+            val students by viewModel.students.collectAsState()
+            val courses by viewModel.courses.collectAsState()
+            val pagerState = rememberPagerState(pageCount = { students.size })
+            val coroutineScope = rememberCoroutineScope()
+            val lifecycleOwner = LocalLifecycleOwner.current
 
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.fetchStudents()
+                        viewModel.fetchCourses()
 
-//@Composable
-//fun DetailItem(icon: ImageVector, text: String) {
-//    Row(
-//        modifier = Modifier.padding(vertical = 4.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Icon(
-//            imageVector = icon,
-//            contentDescription = null,
-//            modifier = Modifier.size(24.dp)
-//        )
-//        Spacer(modifier = Modifier.width(16.dp))
-//        Text(text = text, style = MaterialTheme.typography.bodyLarge)
-//    }
-//}
-
-@Preview(showBackground = true)
-@Composable
-fun StudentScreenPreview(){
-    ManagementsTheme {
-        var viewModel: StudentViewModel = viewModel()
-        StudentScreen(viewModel)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StudentScreen(viewModel: StudentViewModel) {
-    val students by viewModel.students.collectAsState()
-    val courses by viewModel.courses.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
-    var selectedStudent by remember { mutableStateOf<Student?>(null) }
-
-    // Añade esta variable para controlar cuando refrescar
-    var refreshCounter by remember { mutableStateOf(0) }
-
-    LaunchedEffect(refreshCounter) {  // Cambia Unit por refreshCounter
-        viewModel.fetchStudents()
-        viewModel.fetchCourses()
-    }
-
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Students") }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    selectedStudent = null
-                    showDialog = true
-                },
-                containerColor = MaterialTheme.colorScheme.secondary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Student")
-            }
-        }
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            Button(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                onClick = {
-                    refreshCounter++  // Incrementa el contador para forzar refresh
-                }
-            ) {
-                Text("Refresh Data")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            StudentList(
-                students = students,
-                courses = courses,
-                onEdit = { student ->
-                    selectedStudent = student
-                    showDialog = true
-                },
-                onDelete = { student ->
-                    viewModel.deleteStudent(student.id)
-                    refreshCounter++  // Incrementa el contador después de eliminar
-                }
-            )
-        }
-
-        if (showDialog) {
-            StudentDialog(
-                student = selectedStudent,
-                courses = courses,
-                onDismiss = { showDialog = false },
-                onSave = { student ->
-                    if (student.id == null){
-                        viewModel.addStudent(student)
-                    } else{
-                        viewModel.updateStudent(student)
                     }
-                    showDialog = false
-                    refreshCounter++  // Incrementa el contador después de añadir/editar
                 }
-            )
-        }
-    }
-}
-
-@Composable
-fun StudentList(
-    students: List<Student>,
-    courses: List<Course>,
-    modifier: Modifier = Modifier,
-    onEdit: (Student) -> Unit,
-    onDelete: (Student) -> Unit
-) {
-    LazyColumn(modifier = modifier.padding(16.dp)) {
-        items(students) { student ->
-            StudentItem(
-                student = student,
-                courses = courses,
-                onEdit = onEdit,
-                onDelete = onDelete
-            )
-        }
-    }
-}
-
-@Composable
-fun StudentItem(
-    student: Student,
-    courses: List<Course>,
-    onEdit: (Student) -> Unit,
-    onDelete: (Student) -> Unit
-) {
-    val courseName = remember(student.courseId, courses) {
-        courses.firstOrNull { it.id == student.courseId }?.name ?: "Unknown Course"
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-        elevation = CardDefaults.elevatedCardElevation(8.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = student.name, style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = student.email, style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Phone: ${student.phone}", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Course: $courseName", style = MaterialTheme.typography.bodyMedium)
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                TextButton(onClick = { onEdit(student) }) {
-                    Text("Edit", color = MaterialTheme.colorScheme.primary)
-                }
-                TextButton(onClick = { onDelete(student) }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose {
+                    lifecycleOwner.lifecycle.removeObserver(observer)
                 }
             }
-        }
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StudentDialog(
-    student: Student?,
-    courses: List<Course>,
-    onDismiss: () -> Unit,
-    onSave: (Student) -> Unit
-) {
-    var name by remember { mutableStateOf(student?.name ?: "") }
-    var email by remember { mutableStateOf(student?.email ?: "") }
-    var phone by remember { mutableStateOf(student?.phone ?: "") }
-    var selectedCourse by remember { mutableStateOf<Course?>(courses.find { it.id == student?.courseId }) }
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(title = { Text("Students") })
+                }
+            ) { paddingValues ->
+                Column(modifier = Modifier.padding(paddingValues)) {
+                    HorizontalPager(state = pagerState) { page ->
+                        StudentCard(student = students[page])
+                    }
 
-    var expanded by remember { mutableStateOf(false) }
+                    Spacer(modifier = Modifier.height(16.dp))
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = if (student == null) "Add student" else "Edit student") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(students.size) { index ->
+                            IconButton(onClick = {
+                                coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                            }) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (pagerState.currentPage == index)
+                                            android.R.drawable.presence_online
+                                        else
+                                            android.R.drawable.presence_invisible
+                                    ),
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                    }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // Combobox course
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = selectedCourse?.name ?: "Select course",
-                        onValueChange = {},
-                        label = { Text("Course") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    Button(
+                        onClick = {
+                            val intent = Intent(context, StudentsActivity::class.java)
+                            context.startActivity(intent)
                         },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("View all students")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        "Outstanding students",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(16.dp)
                     )
 
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        courses.forEach { course ->
-                            DropdownMenuItem(
-                                text = { Text(course.name) },
-                                onClick = {
-                                    selectedCourse = course
-                                    expanded = false
-                                }
+                    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
+                        items(students.size) { index ->
+                            StudentCard(
+                                student = students[index],
+                                modifier = Modifier.padding(end = 8.dp)
                             )
                         }
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                val updatedStudent = Student(
-                    id = student?.id,
-                    name = name,
-                    email = email,
-                    phone = phone,
-                    courseId = selectedCourse?.id
-                )
-                onSave(updatedStudent)
-            }) {
-                Text("Save")
+        }
+
+        @Composable
+        fun StudentCard(student: Student, modifier: Modifier = Modifier) {
+            val viewModel: StudentViewModel = viewModel()
+            val courses by viewModel.courses.collectAsState()
+
+
+            val courseName = remember(student.courseId, courses) {
+                courses.firstOrNull { it.id == student.courseId }?.name ?: "Unknown Course"
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+
+
+            Card(
+                modifier = modifier.fillMaxWidth().padding(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("👤 Name: ${student.name}", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("📧 Email: ${student.email}", style = MaterialTheme.typography.bodyMedium)
+                    Text("📱 Phone: ${student.phone}", style = MaterialTheme.typography.bodyMedium)
+                    Text("📘 Course: $courseName", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
-    )
-}
+        }
+    }
