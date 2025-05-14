@@ -24,7 +24,7 @@ import com.moviles.managements.ui.theme.ManagementsTheme
 import androidx.compose.ui.platform.LocalContext
 
 
-import com.moviles.managements.ui.theme.screens.StudentMenuActivity
+import com.moviles.managements.ui.theme.screens.StudentActivity
 
 
 //class LandingActivity : ComponentActivity() {
@@ -158,7 +158,7 @@ fun LandingScreen() {
 
             Button(
                 onClick = {
-                    val intent = Intent(context, StudentMenuActivity::class.java)
+                    val intent = Intent(context, StudentActivity::class.java)
                     context.startActivity(intent)
                 },
                 modifier = Modifier

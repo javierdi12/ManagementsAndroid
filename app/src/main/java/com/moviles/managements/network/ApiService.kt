@@ -18,6 +18,8 @@ interface ApiService {
     @GET("api/student")
     suspend fun getStudents(): List<Student>
 
+    @GET("api/Course")
+    suspend fun getCourses(): List<Course>
 
     @POST("api/student")
         suspend fun addStudent(@Body student: Student): Student

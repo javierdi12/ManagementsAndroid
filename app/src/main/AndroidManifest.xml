@@ -31,7 +31,7 @@
         </activity>
 
         <activity
-            android:name=".ui.theme.screens.StudentMenuActivity"
+            android:name=".ui.theme.screens.StudentActivity"
             android:theme="@style/Theme.Managements"/>
 
         <activity
