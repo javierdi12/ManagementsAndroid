@@ -21,33 +21,6 @@ interface ApiService {
     @GET("api/Course")
     suspend fun getCourses(): List<Course>
 
-    @GET("api/Course/{id}")
-    suspend fun getCourseById(@Path("id") id: Int): Course
-
-    @Multipart
-    @POST("api/Course")
-    suspend fun createCourse(
-        @Part("name") name: RequestBody,
-        @Part("description") description: RequestBody,
-        @Part("schedule") schedule: RequestBody,
-        @Part("professor") professor: RequestBody,
-        @Part image: MultipartBody.Part
-    ): Course
-
-    @Multipart
-    @PUT("api/Course/{id}")
-    suspend fun updateCourse(
-        @Path("id") id: Int,
-        @Part("name") name: RequestBody,
-        @Part("description") description: RequestBody,
-        @Part("schedule") schedule: RequestBody,
-        @Part("professor") professor: RequestBody,
-        @Part image: MultipartBody.Part?
-    ): Course
-
-    @DELETE("api/Course/{id}")
-    suspend fun deleteCourse(@Path("id") id: Int): Response<Unit>
-
     @POST("api/student")
         suspend fun addStudent(@Body student: Student): Student
 
