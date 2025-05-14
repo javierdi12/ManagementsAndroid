@@ -43,13 +43,14 @@ import com.moviles.managements.viewmodel.StudentViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 
 import androidx.lifecycle.LifecycleEventObserver
 
 
-class StudentMenuActivity : ComponentActivity() {
+class StudentActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -67,6 +68,7 @@ class StudentMenuActivity : ComponentActivity() {
             val viewModel: StudentViewModel = viewModel()
             val context = LocalContext.current
             val students by viewModel.students.collectAsState()
+            val courses by viewModel.courses.collectAsState()
             val pagerState = rememberPagerState(pageCount = { students.size })
             val coroutineScope = rememberCoroutineScope()
             val lifecycleOwner = LocalLifecycleOwner.current
@@ -75,6 +77,8 @@ class StudentMenuActivity : ComponentActivity() {
                 val observer = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) {
                         viewModel.fetchStudents()
+                        viewModel.fetchCourses()
+
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
@@ -125,13 +129,13 @@ class StudentMenuActivity : ComponentActivity() {
                         },
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     ) {
-                        Text("Ver todos los estudiantes")
+                        Text("View all students")
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        "Estudiantes destacados",
+                        "Outstanding students",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -150,18 +154,27 @@ class StudentMenuActivity : ComponentActivity() {
 
         @Composable
         fun StudentCard(student: Student, modifier: Modifier = Modifier) {
+            val viewModel: StudentViewModel = viewModel()
+            val courses by viewModel.courses.collectAsState()
+
+
+            val courseName = remember(student.courseId, courses) {
+                courses.firstOrNull { it.id == student.courseId }?.name ?: "Unknown Course"
+            }
+
+
             Card(
                 modifier = modifier.fillMaxWidth().padding(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("👤 Nombre: ${student.name}", style = MaterialTheme.typography.titleMedium)
+                    Text("👤 Name: ${student.name}", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("📧 Email: ${student.email}", style = MaterialTheme.typography.bodyMedium)
-                    Text("📱 Teléfono: ${student.phone}", style = MaterialTheme.typography.bodyMedium)
-                    Text("📘 ID del curso: ${student.courseId}", style = MaterialTheme.typography.bodyMedium)
+                    Text("📱 Phone: ${student.phone}", style = MaterialTheme.typography.bodyMedium)
+                    Text("📘 Course: $courseName", style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
+        }
     }
-}
