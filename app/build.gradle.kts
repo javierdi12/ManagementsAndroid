@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     //id("com.google.gms.google-services")
     id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -41,14 +42,23 @@ android {
     }
 }
 
+val roomVersion = "2.5.1"
+
 dependencies {
 
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+    ksp("androidx.room:room-compiler:$roomVersion")
+
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
+
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
@@ -72,6 +82,8 @@ dependencies {
     implementation(libs.coil.compose)
 
 
+    // Coil (Image Loading)
+    implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.material3)
     implementation(platform(libs.androidx.compose.bom))
 
@@ -83,3 +95,4 @@ dependencies {
         exclude(group = "com.intellij", module = "annotations")
     }
 }
+

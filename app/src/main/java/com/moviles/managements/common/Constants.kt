@@ -2,4 +2,6 @@ package com.moviles.managements.common
 
 object Constants {
     const val API_BASE_URL = "http://10.0.2.2:5000/"
+    const val DATABASE_NAME = "management-db"
+    const val CACHE_SIZE = 10 * 1024 * 1024 // 10 MB
 }
