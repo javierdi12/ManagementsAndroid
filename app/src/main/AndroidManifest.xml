@@ -31,7 +31,7 @@
         </activity>
 
         <activity
-            android:name=".ui.theme.screens.StudentActivity"
+            android:name=".ui.theme.screens.StudentDetailActivity"
             android:theme="@style/Theme.Managements"/>
 
         <activity
@@ -40,7 +40,7 @@
             android:theme="@style/Theme.Managements"/>
 
         <activity
-            android:name=".ui.theme.screens.StudentDetailActivity"
+            android:name=".ui.theme.screens.StudentsActivity"
             android:theme="@style/Theme.Managements"/>
     </application>
 </manifest>
