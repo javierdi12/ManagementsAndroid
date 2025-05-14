@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.Index
 
 @Entity(
     tableName = "Students", //Name of the table in the BD
@@ -14,11 +15,14 @@ import androidx.room.PrimaryKey
             childColumns = ["courseId"], // column of this entity that refers to Course
             onDelete = ForeignKey.CASCADE // if the course is deleted, their tasks are deleted
         )
+    ],
+    indices = [
+        Index(value = ["courseId"])  // index to avoid full scans
     ]
 )
 
 data class Student(
-    @PrimaryKey(autoGenerate = true) val id: Int?, //primary key
+    @PrimaryKey(autoGenerate = true) var id: Int?, //primary key
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "email") val email: String,
     @ColumnInfo(name = "phone") val phone: String,

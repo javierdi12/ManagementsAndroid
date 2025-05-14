@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+//import com.google.ai.client.generativeai.common.shared.Content
 import com.moviles.managements.ui.theme.screens.StudentDetailActivity
 
 
@@ -29,8 +30,8 @@ fun ManagementApp() {
             LandingScreen()
         }
 
-        composable("studentMenu") {
-            StudentDetailActivity.Content()
-        }
+//        composable("studentMenu") {
+//            StudentDetailActivity.Content()
+//        }
     }
 }

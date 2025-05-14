@@ -99,7 +99,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
     var showDialog by remember { mutableStateOf(false) }
     var selectedStudent by remember { mutableStateOf<Student?>(null) }
 
-    // Añade esta variable para controlar cuando refrescar
+
     var refreshCounter by remember { mutableStateOf(0) }
 
     LaunchedEffect(refreshCounter) {  // Cambia Unit por refreshCounter
@@ -131,7 +131,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
                     .padding(16.dp)
                     .fillMaxWidth(),
                 onClick = {
-                    refreshCounter++  // Incrementa el contador para forzar refresh
+                    refreshCounter++
                 }
             ) {
                 Text("Refresh Data")
@@ -148,7 +148,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
                 },
                 onDelete = { student ->
                     viewModel.deleteStudent(student.id)
-                    refreshCounter++  // Incrementa el contador después de eliminar
+                    refreshCounter++
                 }
             )
         }
@@ -165,7 +165,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
                         viewModel.updateStudent(student)
                     }
                     showDialog = false
-                    refreshCounter++  // Incrementa el contador después de añadir/editar
+                    refreshCounter++
                 }
             )
         }
