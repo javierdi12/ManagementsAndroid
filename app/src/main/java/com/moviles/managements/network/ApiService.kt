@@ -53,11 +53,6 @@ interface ApiService {
     @POST("api/student")
         suspend fun addStudent(@Body student: Student): Student
 
-//    @POST("api/student")
-//    suspend fun addStudent(@Part("name") name: RequestBody,
-//                            @Part("email") email: RequestBody,
-//                            @Part("phone") phone: RequestBody,
-//                            @Part("courseId") courseId: RequestBody): Student
 
     @PUT("api/student/{id}")
     suspend fun updateStudent(@Path("id") id: Int?, @Body studentDto: Student): Student
