@@ -11,12 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.moviles.managements.ui.theme.screens.StudentDetailActivity
 
 
-/**
- * The root composable of the app.
- * Manages:
- * - Authentication state (logged in or not)
- * - Navigation between Login and Main App
- */
+
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun ManagementApp() {

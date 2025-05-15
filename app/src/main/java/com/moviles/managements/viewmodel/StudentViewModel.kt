@@ -6,22 +6,19 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
 import com.moviles.managements.data.local.AppDatabase
 import com.moviles.managements.models.Course
 import com.moviles.managements.models.Student
-import com.moviles.managements.network.ApiService
+
 import com.moviles.managements.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-
-
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 class StudentViewModel(app: Application) : AndroidViewModel(app) {
@@ -45,110 +42,147 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
 
 
 
+
 //    fun fetchStudents() {
 //        viewModelScope.launch {
 //            isLoading.value = true
 //
+//             //1) Compruebo conectividad
 //            if (!hasNetwork()) {
-//                // Offline: carga lo que haya en la base
+//                // Señalizamos que estamos offline y cargamos de Room
+//                isLoading.value = false
 //                isLoadingFromLocal.value = true
-//                Log.d("ROOM-DBG", "Offline → ${_students.value.size} estudiantes cargados de Room: ${_students.value}")
+//                showOfflineAlert.value = true   // disparará el diálogo en la UI
+//                Log.d("StudentVM", "No hay internet, cargando desde caché…")
+//                val net = apiService.getStudents()
+//                _students.value = net
+//                db.studentDao().insertAll(net)
+//            }
+//
+//
+//            // 2) Si hay red, intento refrescar de la API
+//            try {
+//                val netList = apiService.getStudents()
+//                _students.value = netList
+//                db.studentDao().insertAll(netList)
+//                showOfflineAlert.value = false
+//            } catch (e: Exception) {
+//                // 3) Si falla la llamada, también caigo en offline
+//                isLoadingFromLocal.value = true
+//                showOfflineAlert.value = true
+//                Log.e("StudentVM", "Error al buscar on-line, fallback a caché: ${e.message}")
 //                _students.value = db.studentDao().getAllStudents()
-//                isLoading.value = false
-//                return@launch
-//            }
-//
-//            // Con red: refresca datos
-//            try {
-//                val netList = apiService.getStudents()
-//                Log.d("API-DBG", "getStudents() devolvió ${netList.size} elementos: $netList")
-//                _students.value = netList
-//                db.studentDao().insertAll(netList)
-//                val dbList = db.studentDao().getAllStudents()
-//                Log.d("ROOM-DBG", "Tras insertAll → ${dbList.size} estudiantes en Room: $dbList")
-//                showOfflineAlert.value = false
-//            } catch (e: Exception) {
-//                // Si falla la API, carga local si existe algo
-//                db.studentDao().getAllStudents()
-//                    .takeIf { it.isNotEmpty() }
-//                    ?.let { _students.value = it }
-//                showOfflineAlert.value = true
-//                Log.e("StudentVM", "fetchStudents error: ${e.message}")
-//            } finally {
-//                isLoading.value = false
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Si hay red, baja cursos y guarda en Room;
-//     * si falla, carga lo que haya en Room.
-//     */
-//    fun fetchCourses() {
-//        viewModelScope.launch {
-//            try {
-//                val net = apiService.getCourses()
-//                _courses.value = net
-//                db.courseDao().insertAll(net)
-//            } catch (e: Exception) {
-//                db.courseDao().getAllCourses()
-//                    .takeIf { it.isNotEmpty() }
-//                    ?.let { _courses.value = it }
-//                Log.e("StudentVM", "fetchCourses error: ${e.message}")
-//            }
-//        }
-//    }
-
-//    fun fetchStudents() {
-//        viewModelScope.launch {
-//            isLoading.value = true
-//
-//            if (!hasNetwork()) {
-//                val cached = db.studentDao().getAllStudents()
-//                _students.value = cached
-//
-//                val ca = db.courseDao().getAllCourses()
-//                _courses.value = ca
-//                isLoadingFromLocal.value = true
-//                Log.d("ROOM-DBG", "Offline → ${cached.size} estudiantes en Room: $cached")
-//                Log.d("ROOM-DBG", "Offline → ${ca.size} cursos en Room: $cached")
-//                isLoading.value = false
-//                return@launch
-//            }
-//
-//            try {
-//                val netList = apiService.getStudents()
-//                Log.d("API-DBG", "getStudents() devolvió ${netList.size} elementos")
-//                _students.value = netList
-//
-//                db.studentDao().insertAll(netList)
-//                showOfflineAlert.value = false
-//
-//            } catch (e: Exception) {
-//                val fallback = db.studentDao().getAllStudents()
-//                _students.value = fallback
-//                showOfflineAlert.value = true
-//                Log.e("StudentVM", "fetchStudents error: ${e.message}. Fallback → ${fallback.size}")
 //            } finally {
 //                isLoading.value = false
 //            }
 //        }
 //    }
 
+    private val _studentDetail = MutableStateFlow<Student?>(null)
+    val studentDetail: StateFlow<Student?> = _studentDetail.asStateFlow()
+
+
+    /** 1) TRAER LISTA **/
     fun fetchStudents() {
         viewModelScope.launch {
+            isLoading.value = true
+
+            // OFFLINE puro: cargar solo de Room y salir
+            if (!hasNetwork()) {
+                loadStudentsFromCache()
+                isLoading.value = false
+                return@launch
+            }
+
+            // ONLINE: intento API
             try {
-                val net = apiService.getStudents()
-                _students.value = net
-                db.studentDao().insertAll(net)
+                val netList = apiService.getStudents()
+                _students.value = netList
+
+                // Actualizo caché en background
+                withContext(Dispatchers.IO) {
+                    db.studentDao().insertAll(netList)
+                }
+
+                // restauro flags online
+                isLoadingFromLocal.value = false
+                showOfflineAlert.value   = false
+
             } catch (e: Exception) {
-                val cached = db.studentDao().getAllStudents()
-                _students.value = cached
-                Log.e("StudentVM", "fetchCourses error: ${e.message}")
-                Log.d("ROOM-DBG", "Offline → ${cached.size} studiantes en Room")
+                Log.e("StudentVM", "Error fetchStudents online, fallback a cache: ${e.message}")
+                loadStudentsFromCache()
+            } finally {
+                isLoading.value = false
             }
         }
     }
+
+    private suspend fun loadStudentsFromCache() {
+        val local = withContext(Dispatchers.IO) {
+            db.studentDao().getAllStudents()
+        }
+        _students.value = local
+        isLoadingFromLocal.value = true
+        showOfflineAlert.value   = true
+        Log.d("StudentVM", "Cargando lista desde Room (items=${local.size})")
+    }
+
+//    /** 2) TRAER DETALLE **/
+//    fun fetchStudentById(id: Int) {
+//        viewModelScope.launch {
+//            isLoading.value = true
+//
+//            if (!hasNetwork()) {
+//                loadStudentDetailFromCache(id)
+//                isLoading.value = false
+//                return@launch
+//            }
+//
+//            try {
+//                val detail = apiService.getStudentById(id)
+//                _studentDetail.value = detail
+//
+//                withContext(Dispatchers.IO) {
+//                    db.studentDao().insert(detail)
+//                }
+//
+//                isLoadingFromLocal.value = false
+//                showOfflineAlert.value   = false
+//
+//            } catch (e: Exception) {
+//                Log.e("StudentVM", "Error fetchStudentById online, fallback a cache: ${e.message}")
+//                loadStudentDetailFromCache(id)
+//            } finally {
+//                isLoading.value = false
+//            }
+//        }
+//    }
+
+    private suspend fun loadStudentDetailFromCache(id: Int) {
+        val local = withContext(Dispatchers.IO) {
+            db.studentDao().getStudentById(id)
+        }
+        _studentDetail.value = local
+        isLoadingFromLocal.value = true
+        showOfflineAlert.value   = true
+        Log.d("StudentVM", "Cargando detalle desde Room → $local")
+    }
+
+
+//    fun fetchStudents() {
+//        viewModelScope.launch {
+//            try {
+//                val net = apiService.getStudents()
+//                _students.value = net
+//                db.studentDao().insertAll(net)
+//            } catch (e: Exception) {
+//                val cached = db.studentDao().getAllStudents()
+//                _students.value = cached
+//                Log.e("StudentVM", "fetchCourses error: ${e.message}")
+//                Log.d("ROOM-DBG", "Offline → ${cached.size} studiantes en Room")
+//            }
+//        }
+//    }
 
     fun fetchCourses() {
         viewModelScope.launch {
@@ -157,7 +191,7 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
                 _courses.value = net
                 db.courseDao().insertAll(net)
             } catch (e: Exception) {
-                val cached = db.courseDao().getAllCourses()
+                val cached = db.courseDao().getAllCoursesSql()
                 _courses.value = cached
                 Log.e("StudentVM", "fetchCourses error: ${e.message}")
                 Log.d("ROOM-DBG", "Offline → ${cached.size} cursos en Room")
