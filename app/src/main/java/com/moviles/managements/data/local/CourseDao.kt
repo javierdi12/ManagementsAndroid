@@ -25,6 +25,9 @@ interface CourseDao {
     @Query("DELETE FROM courses WHERE id = :courseId")
     suspend fun deleteCourseById(courseId: Int)
 
+    @Query("DELETE FROM courses")
+    suspend fun deleteAllCourses()
+
     @Query("SELECT * FROM courses ORDER BY name ASC")
     fun getAllCourses(): Flow<List<Course>>
 
