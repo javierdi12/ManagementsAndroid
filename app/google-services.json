@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "12904061854",
+    "project_id": "managements-a5476",
+    "storage_bucket": "managements-a5476.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12904061854:android:0b1cdae9a7a8e38f05148f",
+        "android_client_info": {
+          "package_name": "com.moviles.managements"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMn0lgYRwd5gY0sIQ2P0XBCwT0KBlvwvw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
