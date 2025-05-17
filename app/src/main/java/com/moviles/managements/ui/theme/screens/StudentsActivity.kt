@@ -60,7 +60,7 @@ class StudentsActivity : ComponentActivity() {
         setContent {
             ManagementsTheme {
                 val viewModel: StudentViewModel = viewModel()
-                StudentScreen(viewModel, courseId) // ✨ CAMBIO
+                StudentScreen(viewModel, courseId)
             }
         }
     }
@@ -72,7 +72,7 @@ class StudentsActivity : ComponentActivity() {
 fun StudentScreenPreview(){
     ManagementsTheme {
         val viewModel: StudentViewModel = viewModel()
-        StudentScreen(viewModel, courseId = -1) // ← Este cambio se hizo aquí
+        StudentScreen(viewModel, courseId = -1)
     }
 }
 
@@ -80,7 +80,7 @@ fun StudentScreenPreview(){
 @Composable
 fun StudentScreen(
     viewModel: StudentViewModel,
-    courseId: Int // ✨ CAMBIO
+    courseId: Int
 ) {
     val students by viewModel.students.collectAsState()
     val courses by viewModel.courses.collectAsState()
@@ -93,7 +93,7 @@ fun StudentScreen(
         viewModel.fetchCourses()
     }
 
-    // ✨ CAMBIO: Filtrar estudiantes por el curso recibido
+    // Filtrar estudiantes por el curso recibido
     val filteredStudents = remember(students, courseId) {
         if (courseId != -1) students.filter { it.courseId == courseId } else students
     }

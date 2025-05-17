@@ -87,7 +87,7 @@ fun CourseItem(course: Course, onClick: () -> Unit, onViewStudents: () -> Unit) 
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
             Image(
-                painter = rememberAsyncImagePainter("http://192.168.2.3:5000/uploads/${course.imageUrl}"),
+                painter = rememberAsyncImagePainter("http://10.0.2.2:5000/uploads/${course.imageUrl}"),
                 contentDescription = null,
                 modifier = Modifier.size(80.dp)
             )
