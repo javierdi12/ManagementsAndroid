@@ -65,4 +65,8 @@ interface ApiService {
 
     @GET("api/course/{id}")
     suspend fun getCourse(@Path("id") id: Int): Course
+
+    @GET("api/student/course/{courseId}")
+    suspend fun getStudentsByCourseId(@Path("courseId") courseId: Int): List<Student>
+
 }

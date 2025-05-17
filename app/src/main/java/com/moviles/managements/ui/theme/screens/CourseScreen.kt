@@ -30,7 +30,8 @@ import androidx.compose.ui.graphics.Color
 
 
 @Composable
-fun CourseListScreen(viewModel: CourseViewModel, onAddCourse: () -> Unit, onEditCourse: (Int) -> Unit) {
+fun CourseListScreen(viewModel: CourseViewModel, onAddCourse: () -> Unit,
+                     onEditCourse: (Int) -> Unit,onViewStudents: (Int) -> Unit) {
 
     val courses = viewModel.courses.collectAsState()
     val isFromCache = viewModel.isFromCache.collectAsState()
@@ -64,15 +65,20 @@ fun CourseListScreen(viewModel: CourseViewModel, onAddCourse: () -> Unit, onEdit
 
             LazyColumn(modifier = Modifier.padding(16.dp)) {
                 items(courses.value) { course ->
-                    CourseItem(course = course, onClick = { onEditCourse(course.id) })
+                    CourseItem(
+                        course = course,
+                        onClick = { onEditCourse(course.id) },
+                        onViewStudents = { onViewStudents(course.id) }
+                    )
                 }
             }
         }
     }
 }
 
+
 @Composable
-fun CourseItem(course: Course, onClick: () -> Unit) {
+fun CourseItem(course: Course, onClick: () -> Unit, onViewStudents: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -81,7 +87,6 @@ fun CourseItem(course: Course, onClick: () -> Unit) {
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
             Image(
-                //Si se usa emulador cambiar la ip acá por la del api local host
                 painter = rememberAsyncImagePainter("http://192.168.2.3:5000/uploads/${course.imageUrl}"),
                 contentDescription = null,
                 modifier = Modifier.size(80.dp)
@@ -92,10 +97,17 @@ fun CourseItem(course: Course, onClick: () -> Unit) {
                 Text(course.description)
                 Text("Horario: ${course.schedule}")
                 Text("Profesor: ${course.professor}")
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(onClick = onViewStudents) {
+                    Text("Ver Estudiantes")
+                }
             }
         }
     }
 }
+
 
 //Uri to file
 fun uriToFile(context: Context, uri: Uri): File {

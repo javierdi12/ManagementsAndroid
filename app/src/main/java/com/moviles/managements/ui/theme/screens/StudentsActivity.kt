@@ -55,63 +55,52 @@ class StudentsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val courseId = intent.getIntExtra("courseId", -1)
+
         setContent {
             ManagementsTheme {
                 val viewModel: StudentViewModel = viewModel()
-                StudentScreen(viewModel)
+                StudentScreen(viewModel, courseId) // ✨ CAMBIO
             }
         }
     }
 }
 
 
-
-//@Composable
-//fun DetailItem(icon: ImageVector, text: String) {
-//    Row(
-//        modifier = Modifier.padding(vertical = 4.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Icon(
-//            imageVector = icon,
-//            contentDescription = null,
-//            modifier = Modifier.size(24.dp)
-//        )
-//        Spacer(modifier = Modifier.width(16.dp))
-//        Text(text = text, style = MaterialTheme.typography.bodyLarge)
-//    }
-//}
-
 @Preview(showBackground = true)
 @Composable
 fun StudentScreenPreview(){
     ManagementsTheme {
-        var viewModel: StudentViewModel = viewModel()
-        StudentScreen(viewModel)
+        val viewModel: StudentViewModel = viewModel()
+        StudentScreen(viewModel, courseId = -1) // ← Este cambio se hizo aquí
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentScreen(viewModel: StudentViewModel) {
+fun StudentScreen(
+    viewModel: StudentViewModel,
+    courseId: Int // ✨ CAMBIO
+) {
     val students by viewModel.students.collectAsState()
     val courses by viewModel.courses.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var selectedStudent by remember { mutableStateOf<Student?>(null) }
-
-
     var refreshCounter by remember { mutableStateOf(0) }
 
-    LaunchedEffect(refreshCounter) {  // Cambia Unit por refreshCounter
+    LaunchedEffect(refreshCounter) {
         viewModel.fetchStudents()
         viewModel.fetchCourses()
     }
 
+    // ✨ CAMBIO: Filtrar estudiantes por el curso recibido
+    val filteredStudents = remember(students, courseId) {
+        if (courseId != -1) students.filter { it.courseId == courseId } else students
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Students") }
-            )
+            CenterAlignedTopAppBar(title = { Text("Students") })
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -130,9 +119,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),
-                onClick = {
-                    refreshCounter++
-                }
+                onClick = { refreshCounter++ }
             ) {
                 Text("Refresh Data")
             }
@@ -140,7 +127,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
 
             StudentList(
-                students = students,
+                students = filteredStudents, // ✨ CAMBIO
                 courses = courses,
                 onEdit = { student ->
                     selectedStudent = student
@@ -171,6 +158,7 @@ fun StudentScreen(viewModel: StudentViewModel) {
         }
     }
 }
+
 
 @Composable
 fun StudentList(

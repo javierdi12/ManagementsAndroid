@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.moviles.managements.ui.theme.screens.CreateCourseScreen
+import com.moviles.managements.ui.theme.screens.StudentScreen
+import com.moviles.managements.viewmodel.StudentViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -37,7 +39,8 @@ class MainActivity : ComponentActivity() {
                     CourseListScreen(
                         viewModel = viewModel,
                         onAddCourse = { navController.navigate("create_course") },
-                        onEditCourse = { courseId -> navController.navigate("edit_course/$courseId") }
+                        onEditCourse = { courseId -> navController.navigate("edit_course/$courseId") },
+                        onViewStudents = { courseId -> navController.navigate("students/$courseId") } // ← nuevo
                     )
                 }
 
@@ -65,6 +68,13 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+
+                composable("students/{courseId}") { backStackEntry ->
+                    val courseId = backStackEntry.arguments?.getString("courseId")?.toIntOrNull() ?: -1
+                    val studentViewModel: StudentViewModel = viewModel()
+                    StudentScreen(viewModel = studentViewModel, courseId = courseId)
+                }
+
 
 
 

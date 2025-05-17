@@ -39,45 +39,6 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
     val showOfflineAlert   = mutableStateOf(false)
     val isLoading          = mutableStateOf(false)
 
-
-
-
-
-//    fun fetchStudents() {
-//        viewModelScope.launch {
-//            isLoading.value = true
-//
-//             //1) Compruebo conectividad
-//            if (!hasNetwork()) {
-//                // Señalizamos que estamos offline y cargamos de Room
-//                isLoading.value = false
-//                isLoadingFromLocal.value = true
-//                showOfflineAlert.value = true   // disparará el diálogo en la UI
-//                Log.d("StudentVM", "No hay internet, cargando desde caché…")
-//                val net = apiService.getStudents()
-//                _students.value = net
-//                db.studentDao().insertAll(net)
-//            }
-//
-//
-//            // 2) Si hay red, intento refrescar de la API
-//            try {
-//                val netList = apiService.getStudents()
-//                _students.value = netList
-//                db.studentDao().insertAll(netList)
-//                showOfflineAlert.value = false
-//            } catch (e: Exception) {
-//                // 3) Si falla la llamada, también caigo en offline
-//                isLoadingFromLocal.value = true
-//                showOfflineAlert.value = true
-//                Log.e("StudentVM", "Error al buscar on-line, fallback a caché: ${e.message}")
-//                _students.value = db.studentDao().getAllStudents()
-//            } finally {
-//                isLoading.value = false
-//            }
-//        }
-//    }
-
     private val _studentDetail = MutableStateFlow<Student?>(null)
     val studentDetail: StateFlow<Student?> = _studentDetail.asStateFlow()
 
@@ -127,36 +88,7 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
         Log.d("StudentVM", "Cargando lista desde Room (items=${local.size})")
     }
 
-//    /** 2) TRAER DETALLE **/
-//    fun fetchStudentById(id: Int) {
-//        viewModelScope.launch {
-//            isLoading.value = true
-//
-//            if (!hasNetwork()) {
-//                loadStudentDetailFromCache(id)
-//                isLoading.value = false
-//                return@launch
-//            }
-//
-//            try {
-//                val detail = apiService.getStudentById(id)
-//                _studentDetail.value = detail
-//
-//                withContext(Dispatchers.IO) {
-//                    db.studentDao().insert(detail)
-//                }
-//
-//                isLoadingFromLocal.value = false
-//                showOfflineAlert.value   = false
-//
-//            } catch (e: Exception) {
-//                Log.e("StudentVM", "Error fetchStudentById online, fallback a cache: ${e.message}")
-//                loadStudentDetailFromCache(id)
-//            } finally {
-//                isLoading.value = false
-//            }
-//        }
-//    }
+
 
     private suspend fun loadStudentDetailFromCache(id: Int) {
         val local = withContext(Dispatchers.IO) {
@@ -169,20 +101,6 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
     }
 
 
-//    fun fetchStudents() {
-//        viewModelScope.launch {
-//            try {
-//                val net = apiService.getStudents()
-//                _students.value = net
-//                db.studentDao().insertAll(net)
-//            } catch (e: Exception) {
-//                val cached = db.studentDao().getAllStudents()
-//                _students.value = cached
-//                Log.e("StudentVM", "fetchCourses error: ${e.message}")
-//                Log.d("ROOM-DBG", "Offline → ${cached.size} studiantes en Room")
-//            }
-//        }
-//    }
 
     fun fetchCourses() {
         viewModelScope.launch {
@@ -255,6 +173,38 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
         } ?: Log.e("StudentVM", "deleteStudent: studentId is null")
     }
 
+    //obtener estudiantes por curso
+    fun fetchStudentsByCourseId(courseId: Int) {
+        viewModelScope.launch {
+            isLoading.value = true
+
+            try {
+                val result = apiService.getStudentsByCourseId(courseId)
+                _students.value = result
+
+                // Opcional: cachear
+                withContext(Dispatchers.IO) {
+                    db.studentDao().insertAll(result)
+                }
+
+                isLoadingFromLocal.value = false
+                showOfflineAlert.value = false
+
+            } catch (e: Exception) {
+                // fallback a Room si hay datos guardados
+                val local = withContext(Dispatchers.IO) {
+                    db.studentDao().getStudentsByCourse(courseId)
+                }
+                _students.value = local
+                showOfflineAlert.value = true
+                isLoadingFromLocal.value = true
+                Log.e("StudentVM", "Error fetchByCourse, fallback: ${e.message}")
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
 
     private suspend fun cacheStudent(student: Student) {
         db.studentDao().insert(student)
@@ -270,6 +220,7 @@ class StudentViewModel(app: Application) : AndroidViewModel(app) {
         val caps = cm.getNetworkCapabilities(net) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
+
 
 
 }
